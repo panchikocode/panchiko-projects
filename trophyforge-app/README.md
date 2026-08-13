@@ -19,6 +19,10 @@ python -m venv .venv
 
 Steam must be running and logged in.
 
+After that, `run.bat` starts it. Don't double-click `main.py` — Windows hands
+`.py` files to the global interpreter, which has no PySide6, so it dies on
+the import before you can read the error.
+
 ## What it does — and deliberately doesn't
 
 TrophyForge scans every installed game and shows achievement progress for
