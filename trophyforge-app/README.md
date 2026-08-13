@@ -5,6 +5,10 @@ games, reads each one's achievement schema, and lets you unlock/lock
 achievements locally through the Steamworks API — for games you own, that
 have no online or VAC-protected component.
 
+![Library grid](shot_library.png)
+
+![Game detail](shot_detail.png)
+
 ## Setup
 
 ```
