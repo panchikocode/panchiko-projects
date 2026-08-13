@@ -1,0 +1,481 @@
+<title>Panchiko Catalogue</title>
+<style>
+  /* ————————————————————————————————————————————————————————————————
+     Palette lifted from the two projects themselves: red-dragon's ink
+     and cream (src/palette.js), TrophyForge's purple (ui/theme.py).
+     Light ground is the cartridge manual's paper, dark ground is the
+     game's own ink — neither is a neutral grey.
+     ———————————————————————————————————————————————————————————————— */
+  :root {
+    --ground:      #f5e6c8;
+    --ground-2:    #efdcb8;
+    --panel:       #faf1de;
+    --rule:        #cdb489;
+    --rule-soft:   #ddc9a4;
+    --text:        #241611;
+    --text-dim:    #6b5a3a;
+    --text-faint:  #96805a;
+    --gold:        #9c6c18;
+    --dragon:      #a8321f;
+    --forge:       #6d28d9;
+    --shadow:      rgba(36, 22, 17, .10);
+
+    --mono: ui-monospace, "Cascadia Mono", "SF Mono", "Consolas", "Liberation Mono", monospace;
+    --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+
+    --measure: 62ch;
+    --step-0: .8125rem;
+    --step-1: .9375rem;
+    --step-2: 1.0625rem;
+    --step-3: 1.5rem;
+    --step-4: clamp(2rem, 6vw, 3.25rem);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:     #14090c;
+      --ground-2:   #1c1013;
+      --panel:      #1a0f12;
+      --rule:       #4a3226;
+      --rule-soft:  #33221b;
+      --text:       #f5e6c8;
+      --text-dim:   #c9b48c;
+      --text-faint: #8a7350;
+      --gold:       #f2b33d;
+      --dragon:     #ff7a5e;
+      --forge:      #c084fc;
+      --shadow:     rgba(0, 0, 0, .5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:     #14090c;
+    --ground-2:   #1c1013;
+    --panel:      #1a0f12;
+    --rule:       #4a3226;
+    --rule-soft:  #33221b;
+    --text:       #f5e6c8;
+    --text-dim:   #c9b48c;
+    --text-faint: #8a7350;
+    --gold:       #f2b33d;
+    --dragon:     #ff7a5e;
+    --forge:      #c084fc;
+    --shadow:     rgba(0, 0, 0, .5);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: var(--step-1);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 74rem;
+    margin: 0 auto;
+    padding: 0 clamp(1rem, 4vw, 2.5rem);
+  }
+
+  /* —— shared type roles ——————————————————————————————————————— */
+
+  .label {
+    font-family: var(--mono);
+    font-size: .6875rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* —— masthead ————————————————————————————————————————————————— */
+
+  header {
+    position: relative;
+    border-bottom: 1px solid var(--rule);
+    overflow: hidden;
+  }
+
+  #embers {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    opacity: .55;
+  }
+
+  .masthead {
+    position: relative;
+    padding: clamp(3rem, 9vw, 6rem) 0 clamp(2rem, 5vw, 3rem);
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .masthead h1 {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: var(--step-4);
+    font-weight: 700;
+    letter-spacing: .04em;
+    line-height: 1.05;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .masthead h1 .of { color: var(--gold); }
+
+  .masthead p {
+    margin: 0;
+    max-width: var(--measure);
+    color: var(--text-dim);
+  }
+
+  .imprint {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.5rem;
+    padding-top: .5rem;
+    border-top: 1px solid var(--rule-soft);
+  }
+
+  /* —— catalogue records ————————————————————————————————————————— */
+
+  main { padding: clamp(2.5rem, 7vw, 4.5rem) 0 0; }
+
+  .record {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(1.5rem, 4vw, 2.75rem);
+    padding: clamp(2rem, 5vw, 3rem) 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .record:first-of-type { border-top: 0; padding-top: 0; }
+
+  @media (min-width: 60rem) {
+    .record { grid-template-columns: 1fr 22rem; align-items: start; }
+  }
+
+  .record-head {
+    display: flex;
+    align-items: baseline;
+    gap: .875rem;
+    margin-bottom: .75rem;
+  }
+
+  /* the spine carries each project's own accent — it is identification,
+     not decoration, so it uses the colour that project actually ships */
+  .spine {
+    width: 3px;
+    align-self: stretch;
+    border-radius: 2px;
+    background: var(--accent);
+    flex: none;
+  }
+
+  .record h2 {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: var(--step-3);
+    font-weight: 700;
+    letter-spacing: .01em;
+    line-height: 1.2;
+  }
+
+  .catno {
+    font-family: var(--mono);
+    font-size: .6875rem;
+    letter-spacing: .16em;
+    color: var(--accent);
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    padding: .0625rem .375rem;
+    white-space: nowrap;
+  }
+
+  .record .body { max-width: var(--measure); }
+  .record .body p { margin: 0 0 .875rem; }
+  .record .body p:last-child { margin-bottom: 0; }
+
+  /* —— spec sheet ———————————————————————————————————————————————— */
+
+  .spec {
+    font-family: var(--mono);
+    font-size: var(--step-0);
+    background: var(--panel);
+    border: 1px solid var(--rule-soft);
+    border-radius: 3px;
+    padding: .25rem 1rem;
+    box-shadow: 0 1px 0 var(--shadow);
+  }
+
+  .spec div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: .5rem 0;
+    border-bottom: 1px dotted var(--rule-soft);
+  }
+
+  .spec div:last-child { border-bottom: 0; }
+
+  .spec dt {
+    color: var(--text-faint);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    font-size: .625rem;
+    white-space: nowrap;
+  }
+
+  .spec dd {
+    margin: 0;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+
+  /* —— links ————————————————————————————————————————————————————— */
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .625rem;
+    margin-top: 1.25rem;
+  }
+
+  a.btn {
+    font-family: var(--mono);
+    font-size: .75rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--text);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: .5rem .875rem;
+    transition: border-color .12s, color .12s, background-color .12s;
+  }
+
+  a.btn:hover,
+  a.btn:focus-visible {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--ground-2);
+  }
+
+  a.btn.primary {
+    color: var(--ground);
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  a.btn.primary:hover,
+  a.btn.primary:focus-visible {
+    color: var(--ground);
+    filter: brightness(1.12);
+  }
+
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  /* —— colophon —————————————————————————————————————————————————— */
+
+  footer {
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+    border-top: 1px solid var(--rule);
+    padding: 1.5rem 0 3rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.5rem;
+    justify-content: space-between;
+  }
+
+  footer a { color: var(--text-dim); }
+
+  @media (prefers-reduced-motion: reduce) {
+    #embers { display: none; }
+    * { transition: none !important; }
+  }
+</style>
+
+<header>
+  <canvas id="embers" aria-hidden="true"></canvas>
+  <div class="wrap masthead">
+    <span class="label">Panchiko&nbsp;/&nbsp;Catalogue of releases</span>
+    <h1>Two things<br>built <span class="of">from scratch</span></h1>
+    <p>
+      A platformer that pretends to be a 1994 cartridge and draws every pixel
+      in code, and a desktop tool that talks to Steamworks over raw ctypes.
+      Both finished, both runnable, both source-available.
+    </p>
+    <div class="imprint">
+      <span class="label">Entries <span class="num">02</span></span>
+      <span class="label">Source <span class="num">6,223</span> lines</span>
+      <span class="label">Windows &amp; browser</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ————————————————————————————————————— RD-001 -->
+  <article class="record" style="--accent: var(--dragon);">
+    <div>
+      <div class="record-head">
+        <span class="spine"></span>
+        <h2>Legend of the Red Dragon</h2>
+        <span class="catno">RD-001</span>
+      </div>
+      <div class="body">
+        <p>
+          A side-scrolling platformer presented as a lost Famicom cartridge —
+          Red Dragon Software, Shanghai, 1994, 5,000 units pressed. The fiction
+          is the point, but the engineering is real: there is not a single image
+          file in the project. Every sprite, tile, parallax layer and menu glyph
+          is drawn pixel by pixel in JavaScript at load time, and the whole
+          soundtrack is synthesized through WebAudio.
+        </p>
+        <p>
+          It runs in a browser with no build step, and ships as a single
+          portable Windows executable that needs nothing installed.
+        </p>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="https://github.com/panchikocode/panchiko-projects/releases/download/red-dragon-v1.0/LegendOfTheRedDragon.exe">Download .exe — 71 MB</a>
+        <a class="btn" href="https://github.com/panchikocode/panchiko-projects/tree/main/red-dragon">Source</a>
+        <a class="btn" href="https://github.com/panchikocode/panchiko-projects/releases/tag/red-dragon-v1.0">Release notes</a>
+      </div>
+    </div>
+    <dl class="spec">
+      <div><dt>Engine</dt><dd>Phaser 3.80</dd></div>
+      <div><dt>Source</dt><dd>4,134 lines JS</dd></div>
+      <div><dt>Level</dt><dd>462 × 18 tiles</dd></div>
+      <div><dt>World</dt><dd>7,392 px wide</dd></div>
+      <div><dt>Enemies</dt><dd>47 + 2 bosses</dd></div>
+      <div><dt>Image assets</dt><dd>0</dd></div>
+      <div><dt>Audio assets</dt><dd>0</dd></div>
+      <div><dt>Desktop shell</dt><dd>Electron 33</dd></div>
+      <div><dt>Native res</dt><dd>384 × 216</dd></div>
+    </dl>
+  </article>
+
+  <!-- ————————————————————————————————————— TF-002 -->
+  <article class="record" style="--accent: var(--forge);">
+    <div>
+      <div class="record-head">
+        <span class="spine"></span>
+        <h2>TrophyForge</h2>
+        <span class="catno">TF-002</span>
+      </div>
+      <div class="body">
+        <p>
+          An offline Steam achievement manager. It finds every installed game,
+          reads each one's achievement schema, and unlocks or locks them locally
+          through the Steamworks API — driven from Python over ctypes, with all
+          native calls confined to a worker thread so the interface never
+          blocks on them.
+        </p>
+        <p>
+          The unlock controls stay disabled unless a game clears every safety
+          check: a modern SDK, a 64-bit build, no VAC, and no online
+          competitive component. When the check itself cannot run, the game is
+          treated as unsupported rather than assumed safe. That boundary is not
+          a setting.
+        </p>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="https://github.com/panchikocode/panchiko-projects/tree/main/trophyforge-app">Source</a>
+        <a class="btn" href="https://github.com/panchikocode/panchiko-projects/blob/main/trophyforge-app/README.md">Read the docs</a>
+      </div>
+    </div>
+    <dl class="spec">
+      <div><dt>Toolkit</dt><dd>PySide6 / Qt 6.11</dd></div>
+      <div><dt>Source</dt><dd>2,089 lines Python</dd></div>
+      <div><dt>Bridge</dt><dd>ctypes → Steamworks</dd></div>
+      <div><dt>Platform</dt><dd>Windows</dd></div>
+      <div><dt>Bundled assets</dt><dd>0</dd></div>
+      <div><dt>Unlock chime</dt><dd>synthesized</dd></div>
+      <div><dt>Network use</dt><dd>store metadata only</dd></div>
+    </dl>
+  </article>
+
+</main>
+
+<footer class="wrap">
+  <span class="label">Set in the browser's monospace &amp; UI faces</span>
+  <span class="label"><a href="https://github.com/panchikocode/panchiko-projects">github.com/panchikocode</a></span>
+</footer>
+
+<script>
+  /* Ambient ember field behind the masthead — the same effect the game runs
+     in its own title screen, in the same palette. Purely decorative, and
+     switched off entirely under prefers-reduced-motion. */
+  (function () {
+    var canvas = document.getElementById('embers');
+    if (!canvas) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var ctx = canvas.getContext('2d');
+    var motes = [];
+    var w = 0, h = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var COLORS = ['#ff9a3c', '#f2b33d', '#ffd772', '#ff7a5e'];
+
+    function resize() {
+      var r = canvas.getBoundingClientRect();
+      w = r.width; h = r.height;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      var target = Math.round(w * h / 9000);
+      while (motes.length < target) motes.push(spawn(true));
+      motes.length = Math.min(motes.length, target);
+    }
+
+    function spawn(anywhere) {
+      return {
+        x: Math.random() * w,
+        y: anywhere ? Math.random() * h : h + 8,
+        vy: -(6 + Math.random() * 16),
+        vx: (Math.random() - 0.5) * 10,
+        size: 1 + Math.random() * 2,
+        life: 0,
+        max: 3 + Math.random() * 4,
+        color: COLORS[(Math.random() * COLORS.length) | 0]
+      };
+    }
+
+    var last = 0;
+    function frame(t) {
+      var dt = last ? Math.min((t - last) / 1000, 0.05) : 0;
+      last = t;
+      ctx.clearRect(0, 0, w, h);
+
+      for (var i = 0; i < motes.length; i++) {
+        var m = motes[i];
+        m.life += dt;
+        m.x += m.vx * dt;
+        m.y += m.vy * dt;
+        if (m.life >= m.max || m.y < -8) { motes[i] = spawn(false); continue; }
+
+        var k = m.life / m.max;
+        ctx.globalAlpha = Math.sin(k * Math.PI) * 0.85;
+        ctx.fillStyle = m.color;
+        /* square motes, not circles — the game has no sub-pixel art */
+        ctx.fillRect(Math.round(m.x), Math.round(m.y), m.size, m.size);
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(frame);
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+    requestAnimationFrame(frame);
+  })();
+</script>
