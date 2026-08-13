@@ -104,7 +104,9 @@
     <small>THE GPU DROPPED THE CARTRIDGE. CLICK OR PRESS ANY KEY TO RELOAD.</small>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <!-- vendored rather than pulled from a CDN: the desktop build has no
+       network, and the browser build should not need one either -->
+  <script src="vendor/phaser.min.js"></script>
   <script src="src/palette.js"></script>
   <script src="src/pixel.js"></script>
   <script src="src/art_sprites.js"></script>

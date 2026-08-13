@@ -6,8 +6,8 @@ Recovered and remastered as an HTML5 prototype on Phaser 3.
 ## Run
 
 Open `index.html` in a browser. No build step, no server needed — all scripts are
-plain `<script>` tags, so `file://` works. Phaser 3.80 loads from jsDelivr, so the
-first load needs an internet connection.
+plain `<script>` tags, so `file://` works. Phaser 3.80 is vendored in `vendor/`,
+so no internet connection is needed either.
 
 If you prefer a server:
 
@@ -15,6 +15,28 @@ If you prefer a server:
 python -m http.server 8777 --bind 127.0.0.1
 ```
 then http://127.0.0.1:8777/
+
+## Desktop build
+
+A standalone Windows executable — same game, same files, wrapped in Electron:
+
+```
+npm install
+npm run dist
+```
+
+That writes a single portable `dist/LegendOfTheRedDragon.exe` (~71 MB, no
+installer, no dependencies). `npm start` runs it from source without packaging.
+
+`F11` fullscreen · `F12` devtools · `Ctrl+R` reload.
+
+Two notes on Windows:
+
+- The build is unsigned, so SmartScreen will warn on first run.
+- Don't launch it from a VS Code integrated terminal. VS Code exports
+  `ELECTRON_RUN_AS_NODE=1` to child processes, which makes Electron boot as
+  plain Node and fail immediately; `electron-main.cjs` detects that and prints
+  why. Explorer, cmd and PowerShell outside VS Code are all fine.
 
 ## Controls
 
