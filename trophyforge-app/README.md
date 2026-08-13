@@ -7,8 +7,6 @@ have no online or VAC-protected component.
 
 ![Library grid](shot_library.png)
 
-![Game detail](shot_detail.png)
-
 ## Setup
 
 ```
