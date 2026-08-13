@@ -29,6 +29,24 @@ window.addEventListener('load', () => {
   const game = new Phaser.Game(config);
   window.__game = game;
 
+  /* a lost WebGL context leaves a blank canvas that still swallows clicks —
+     the app looks alive and is not. surface it and offer a reload. */
+  const canvas = game.canvas;
+  const lost = document.getElementById('lost');
+  if (canvas) {
+    canvas.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      try { SND.stop(); } catch (err) { /* audio may never have started */ }
+      if (lost) {
+        lost.style.display = 'flex';
+        const reload = () => location.reload();
+        lost.addEventListener('click', reload, { once: true });
+        window.addEventListener('keydown', reload, { once: true });
+      }
+    }, false);
+    canvas.addEventListener('webglcontextrestored', () => location.reload(), false);
+  }
+
   /* the audio context may only start after a real gesture */
   const wake = () => { SND.init(); SND.resume(); };
   window.addEventListener('keydown', wake, { once: true });

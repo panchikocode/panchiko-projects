@@ -5,6 +5,12 @@
 
 const VW = 384, VH = 216;
 
+/* how far past the viewport things keep working. the level is 7392px wide,
+   so without these every torch, lantern and enemy on the map animates and
+   spits particles every frame, off-screen, forever. */
+const CULL = 96;    /* decor */
+const SLEEP = VW;   /* enemy AI + physics */
+
 function lerpColor(a, b, t) {
   const A = Phaser.Display.Color.IntegerToColor(a), B = Phaser.Display.Color.IntegerToColor(b);
   const c = Phaser.Display.Color.Interpolate.ColorWithColor(A, B, 100, t * 100);
@@ -24,13 +30,31 @@ const ACT_LOOK = [
 class BootScene extends Phaser.Scene {
   constructor() { super('boot'); }
   create() {
-    buildFont(this, 'fnt', C.cream3, C.ink);
-    ART.sprites(this);
-    ART_W.all(this);
-    ART.anims(this);
     const el = document.getElementById('boot');
-    if (el) el.remove();
-    this.scene.start('title');
+
+    /* minting every texture takes a while; do it one stage per frame so the
+       browser can still paint, instead of freezing on a dead screen */
+    const stages = [
+      ['FONT',    () => buildFont(this, 'fnt', C.cream3, C.ink)],
+      ['SPRITES', () => ART.sprites(this)],
+      ['WORLD',   () => ART_W.all(this)],
+      ['ANIMS',   () => ART.anims(this)]
+    ];
+
+    let i = 0;
+    const step = () => {
+      if (i >= stages.length) {
+        if (el) el.remove();
+        this.scene.start('title');
+        return;
+      }
+      const [label, fn] = stages[i];
+      if (el) el.textContent = 'MINTING ' + label + '… ' +
+        Math.round(i / stages.length * 100) + '%';
+      /* yield one frame so the label above actually reaches the screen */
+      this.time.delayedCall(0, () => { fn(); i++; step(); });
+    };
+    step();
   }
 }
 
@@ -813,20 +837,28 @@ class GameScene extends Phaser.Scene {
     let t = Phaser.Math.Clamp((P.x - a.from) / (a.to - a.from), 0, 1);
     let blend = 0, nxt = act;
     if (t > 0.82 && act < L.acts.length - 1) { blend = (t - 0.82) / 0.18; nxt = act + 1; }
-    this.skies.forEach((s, i) => s.setAlpha(i === act ? 1 - blend : (i === nxt && blend > 0 ? blend : 0)));
-    const look = ACT_LOOK[act], lookN = ACT_LOOK[nxt];
-    const bl = (k) => lerpColor(look[k], lookN[k], blend);
-    const bn = (k) => look[k] + (lookN[k] - look[k]) * blend;
-    this.mtnFar.setTint(bl('mtn'));
-    this.mtnMid.setTint(lerpColor(look.mtn, lookN.mtn, blend) & 0xbfbfbf);
-    this.wallFar.setTint(bl('wall'));
-    this.fogBand.setTint(bl('fog'));
-    this.fogFront.setTint(bl('fog'));
-    this.stars.setAlpha(bn('stars'));
-    this.clouds.setAlpha(bn('clouds'));
-    this.moon.setTint(bl('moon'));
-    this.moonGlow.setTint(bl('moon'));
-    this.ambient.setFillStyle(bl('amb'), 0.18);
+    /* every tint below runs lerpColor, which allocates Color objects — only
+       redo the whole palette when the act or the blend actually moved */
+    const skyKey = act * 1000 + nxt * 100 + Math.round(blend * 64);
+    if (skyKey !== this._skyKey) {
+      this._skyKey = skyKey;
+      this.skies.forEach((s, i) => s.setAlpha(i === act ? 1 - blend : (i === nxt && blend > 0 ? blend : 0)));
+      const look = ACT_LOOK[act], lookN = ACT_LOOK[nxt];
+      const bl = (k) => lerpColor(look[k], lookN[k], blend);
+      const bn = (k) => look[k] + (lookN[k] - look[k]) * blend;
+      this.mtnFar.setTint(bl('mtn'));
+      this.mtnMid.setTint(lerpColor(look.mtn, lookN.mtn, blend) & 0xbfbfbf);
+      this.wallFar.setTint(bl('wall'));
+      const fog = bl('fog');
+      this.fogBand.setTint(fog);
+      this.fogFront.setTint(fog);
+      this.stars.setAlpha(bn('stars'));
+      this.clouds.setAlpha(bn('clouds'));
+      const moon = bl('moon');
+      this.moon.setTint(moon);
+      this.moonGlow.setTint(moon);
+      this.ambient.setFillStyle(bl('amb'), 0.18);
+    }
     if (act !== this.actShown) this.showActCard(act);
 
     /* ---- parallax ---- */
@@ -838,30 +870,41 @@ class GameScene extends Phaser.Scene {
     this.fogBand.tilePositionX = sx * 0.46 + time * 0.004;
     this.fogFront.tilePositionX = sx * 1.22 + time * 0.008;
     this.grassFront.tilePositionX = sx * 1.15;
-    this.grassFront.setTexture('grass' + (Math.floor(time / 260) % 3));
+    const gf = Math.floor(time / 260) % 3;
+    if (gf !== this._grassF) { this._grassF = gf; this.grassFront.setTexture('grass' + gf); }
     this.mtnFar.y = 62 - sy * 0.08;
     this.mtnMid.y = 74 - sy * 0.14;
     this.wallFar.y = 106 - sy * 0.24;
     this.moon.y = 40 - sy * 0.05 + Math.sin(time * 0.0005) * 1.5;
     this.moonGlow.y = this.moon.y;
 
-    /* ambient embers follow the camera */
-    this.emAmbient.setPosition(0, 0);
-
-    /* ---- decor animation ---- */
+    /* ---- decor animation (on-screen only) ---- */
+    const x0 = sx - CULL, x1 = sx + VW + CULL;
     const f2 = Math.floor(time / 110) % 2;
     const f3 = Math.floor(time / 190) % 3;
-    this.torches.forEach(o => { o.s.setTexture('torch' + f2); o.lg.setAlpha(0.34 + Math.sin(time * 0.011 + o.t) * 0.1); });
-    this.banners.forEach(o => o.s.setTexture('banner' + ((f3 + (o.t | 0)) % 3)));
+    const f2New = f2 !== this._f2, f3New = f3 !== this._f3;
+    this._f2 = f2; this._f3 = f3;
+
+    this.torches.forEach(o => {
+      if (o.s.x < x0 || o.s.x > x1) return;
+      if (f2New) o.s.setTexture('torch' + f2);
+      o.lg.setAlpha(0.34 + Math.sin(time * 0.011 + o.t) * 0.1);
+    });
+    if (f3New) this.banners.forEach(o => {
+      if (o.s.x < x0 || o.s.x > x1) return;
+      o.s.setTexture('banner' + ((f3 + (o.t | 0)) % 3));
+    });
 
     /* swinging lanterns */
     this.chainGfx.clear();
     this.chainGfx.lineStyle(1, 0x3a2a20, 1);
     this.lanterns.forEach(o => {
+      if (o.ax < x0 || o.ax > x1) return;
       const ang = Math.sin(time * 0.0016 + o.ph) * 0.5;
       const lx = o.ax + Math.sin(ang) * o.len;
       const ly = o.ay + Math.cos(ang) * o.len;
-      o.s.setPosition(lx, ly).setRotation(ang * 0.6).setTexture('lantern' + f2);
+      o.s.setPosition(lx, ly).setRotation(ang * 0.6);
+      if (f2New) o.s.setTexture('lantern' + f2);
       o.light.setPosition(lx, ly + 2).setAlpha(0.42 + Math.sin(time * 0.009 + o.ph) * 0.1);
       this.chainGfx.lineBetween(o.ax, o.ay, lx, ly - 8);
       this.chainGfx.fillStyle(0x5a4a3a, 1);
@@ -912,6 +955,20 @@ class GameScene extends Phaser.Scene {
         .setScale(0.6 + Math.sin(time * 0.012) * 0.08);
       if (Math.random() < 0.5) this.trailEmber(P.x + (Math.random() - 0.5) * 12, P.y + (Math.random() - 0.5) * 14, CN.gold4);
     }
+
+    /* ---- park enemies that are nowhere near the camera ----
+       an inactive sprite is skipped by the update list entirely, so its AI,
+       its animation and its ember trail all stop costing anything. bosses
+       run their own wake()/sleep cycle and are left alone. */
+    const wx0 = sx - SLEEP, wx1 = sx + VW + SLEEP;
+    this.enemies.getChildren().forEach(e => {
+      if (e.wake) return;
+      const asleep = e.x < wx0 || e.x > wx1;
+      if (e.asleep === asleep) return;
+      e.asleep = asleep;
+      e.setActive(!asleep).setVisible(!asleep);
+      if (e.body) e.body.enable = !asleep;
+    });
 
     /* ---- housekeeping ---- */
     if (!P.dead && P.y > L.pxH + 24) { P.hp = 0; P.die(); }
@@ -1090,11 +1147,28 @@ class HudScene extends Phaser.Scene {
     if (!this.ready || !this.g || !this.g.state) return;
     const s = this.g.state;
 
-    this.lifeIcons.forEach((im, i) => im.setVisible(i < Math.max(0, s.lives)));
-    this.pips.forEach((p, i) => p.setTexture(i < s.hp ? 'ui_pip' : 'ui_pip_off'));
-    this.scoreTxt.setText(String(Math.floor(s.score)).padStart(7, '0'));
-    this.scrollTxt.setText(String(s.scrolls).padStart(2, '0'));
-    this.coinTxt.setText(String(s.coins).padStart(2, '0'));
+    /* the HUD only changes on events, so redraw it only when a value moved */
+    const score = Math.floor(s.score);
+    if (s.lives !== this._lives) {
+      this._lives = s.lives;
+      this.lifeIcons.forEach((im, i) => im.setVisible(i < Math.max(0, s.lives)));
+    }
+    if (s.hp !== this._hp) {
+      this._hp = s.hp;
+      this.pips.forEach((p, i) => p.setTexture(i < s.hp ? 'ui_pip' : 'ui_pip_off'));
+    }
+    if (score !== this._score) {
+      this._score = score;
+      this.scoreTxt.setText(String(score).padStart(7, '0'));
+    }
+    if (s.scrolls !== this._scrolls) {
+      this._scrolls = s.scrolls;
+      this.scrollTxt.setText(String(s.scrolls).padStart(2, '0'));
+    }
+    if (s.coins !== this._coins) {
+      this._coins = s.coins;
+      this.coinTxt.setText(String(s.coins).padStart(2, '0'));
+    }
 
     if (s.combo > 1) {
       this.comboTxt.setText(s.combo + ' HIT  X' + s.mult).setVisible(true);
