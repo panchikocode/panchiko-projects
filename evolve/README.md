@@ -11,17 +11,18 @@ after that is planned but not written; see the roadmap at the bottom.
 
 ## Running it
 
-There is no scene file to open and nothing to drag into an inspector.
-
 1. Open this folder as a project in Unity Hub. It targets **Unity 2022.3 LTS or
-   newer**, including Unity 6.
-2. Let Unity generate `Library/` and `ProjectSettings/` on first open — that
-   takes a minute and is normal.
-3. **Evolve → Create Stage 1 Scene** from the menu bar.
+   newer**; it is built and verified on **Unity 6.3 LTS (6000.3.22f1)**.
+2. Let Unity generate `Library/` on first open — that takes a minute and is
+   normal.
+3. Open `Assets/Scenes/Stage1_Broth.unity`.
 4. Press Play.
 
-If you would rather use a scene you already have, **Evolve → Add Bootstrap To
-Current Scene** drops the single object it needs into it.
+The scene holds one empty object with `GameBootstrap` on it; everything else is
+created at runtime, so there is nothing to drag into an inspector. If you delete
+it or want a fresh one, **Evolve → Create Stage 1 Scene** rebuilds it, and
+**Evolve → Add Bootstrap To Current Scene** drops the same object into a scene
+you already have.
 
 ### A correction on the version
 
@@ -120,6 +121,12 @@ Per-organism numbers live on `CellStats`, `SwimMotor` and `PredatorAI`.
 
 ## Status
 
-Written but **not compiled** — Unity is not installed on the machine this was
-authored on, so nothing here has been through a compiler or a play session.
-Treat the first run as a bring-up: expect to fix a typo or two before it moves.
+Compiles clean on Unity 6.3 LTS (6000.3.22f1) — `Assembly-CSharp.dll` and
+`Assembly-CSharp-Editor.dll` both build with no errors and no warnings. The
+scene loads and the project opens.
+
+It has **not been played through** yet, so the numbers are unproven: how fast
+growth feels, whether the predators are a threat or a nuisance, whether food
+density is right. Expect to spend the first session on the tuning values rather
+than on bugs — they are all exposed on `GameBootstrap`, `CellStats`,
+`SwimMotor` and `PredatorAI` in the inspector.

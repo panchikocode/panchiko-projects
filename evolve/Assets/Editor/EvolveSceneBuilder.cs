@@ -28,6 +28,23 @@ namespace Evolve.EditorTools
 
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
 
+            BuildScene();
+            EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath<Object>(ScenePath));
+        }
+
+        /// <summary>
+        /// Same thing with no prompts, for `-batchmode -executeMethod`. Batch
+        /// runs have nobody to answer a dialog and no scene worth preserving,
+        /// so both confirmation steps are skipped rather than silently
+        /// answered for the user in the interactive path.
+        /// </summary>
+        public static void CreateStageOneSceneSilent()
+        {
+            BuildScene();
+        }
+
+        static void BuildScene()
+        {
             var scene = EditorSceneManager.NewScene(
                 NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -38,7 +55,6 @@ namespace Evolve.EditorTools
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.Refresh();
 
-            EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath<Object>(ScenePath));
             Debug.Log($"[Evolve] Created {ScenePath}. Press Play.");
         }
 

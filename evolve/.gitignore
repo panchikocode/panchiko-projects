@@ -13,6 +13,7 @@
 *.csproj
 *.unityproj
 *.sln
+*.slnx
 *.suo
 *.user
 *.userprefs
@@ -25,6 +26,7 @@
 *.VC.db
 
 .vs/
+.vscode/
 .idea/
 .gradle/
 .consulo/
