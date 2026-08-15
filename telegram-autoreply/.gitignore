@@ -1,0 +1,16 @@
+# Local config with API credentials and the target chat.
+config.toml
+
+# Telethon login session — anyone holding this file is logged into the account.
+*.session
+*.session-journal
+
+# The conversation record.
+transcript.jsonl
+
+# Kill switch.
+STOP
+
+__pycache__/
+*.pyc
+.venv/

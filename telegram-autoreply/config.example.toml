@@ -1,0 +1,65 @@
+# Copy to config.toml and fill in. config.toml is gitignored.
+
+# Append-only record of everything seen, generated, sent, and blocked.
+# Must stay above the first [section] header — a bare key after one belongs
+# to that table, not to the top level.
+log_path = "transcript.jsonl"
+
+[telegram]
+# From https://my.telegram.org -> API development tools. Free.
+api_id = 0
+api_hash = ""
+
+# The ONLY chat this program will ever speak in. Use the numeric user id,
+# or the @username. Everything else is ignored, and the check runs again on
+# every inbound message.
+target_chat = ""
+
+# Telethon session file name. Created on first run, after you log in once.
+session_name = "autoreply"
+
+[claude]
+model = "claude-opus-5"
+
+# low | medium | high | xhigh | max. Chat replies do not need deep reasoning,
+# and low keeps latency down — a 20-second pause before "ок" is its own tell.
+effort = "low"
+
+max_tokens = 1024
+
+# How much of the conversation the model sees each time.
+context_messages = 40
+
+# How many of your own past messages to learn your writing voice from.
+style_messages = 300
+
+[behaviour]
+# Standing instructions layered on top of the learned voice. Optional.
+persona = """
+Keep it casual. Don't start topics of your own — respond to what's said.
+If the conversation gets personal or serious, keep answers short and vague.
+"""
+
+# Pause before the typing indicator appears, in seconds.
+read_delay_min = 2.0
+read_delay_max = 8.0
+
+# Characters "typed" per second — sizes the typing indicator.
+typing_cps = 11.0
+
+# Hard rate limits.
+max_replies_per_hour = 25
+min_seconds_between_replies = 5.0
+
+# Nothing longer than this is ever sent.
+max_reply_chars = 400
+
+# Any reply containing one of these, case-insensitive, is dropped and logged.
+# Money, credentials, and anything you'd rather answer in person.
+blocked_substrings = [
+  "переведи",
+  "карта",
+  "пароль",
+  "код из смс",
+  "адрес",
+]
