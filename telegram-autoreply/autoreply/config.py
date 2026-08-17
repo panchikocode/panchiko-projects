@@ -78,7 +78,15 @@ class Config:
         return self.telegram.target_chat
 
 
-def load(path: str | Path) -> Config:
+def load(path: str | Path, *, require_telegram: bool = True) -> Config:
+    """
+    Load and validate the config.
+
+    `require_telegram` exists for the offline tuning tool, which exercises the
+    voice and the guard but never opens a connection. Demanding placeholder
+    credentials from someone who is still waiting on Telegram to hand them out
+    is a pointless hurdle.
+    """
     path = Path(path)
     if not path.exists():
         raise ConfigError(
@@ -89,15 +97,16 @@ def load(path: str | Path) -> Config:
         raw = tomllib.load(fh)
 
     tg = raw.get("telegram", {})
-    for key in ("api_id", "api_hash", "target_chat"):
-        if not tg.get(key):
-            raise ConfigError(f"telegram.{key} is required in {path.name}")
+    if require_telegram:
+        for key in ("api_id", "api_hash", "target_chat"):
+            if not tg.get(key):
+                raise ConfigError(f"telegram.{key} is required in {path.name}")
 
     telegram = TelegramConfig(
-        api_id=int(tg["api_id"]),
-        api_hash=str(tg["api_hash"]),
+        api_id=int(tg.get("api_id") or 0),
+        api_hash=str(tg.get("api_hash") or ""),
         session_name=str(tg.get("session_name", "autoreply")),
-        target_chat=tg["target_chat"],
+        target_chat=tg.get("target_chat") or "",
     )
 
     cl = raw.get("claude", {})

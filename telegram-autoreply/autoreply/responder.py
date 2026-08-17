@@ -77,6 +77,19 @@ class Reply:
     reason: str
 
 
+_HOW_TO_SET_KEY = (
+    "Set it for this terminal:\n"
+    '    $env:ANTHROPIC_API_KEY = "sk-ant-..."\n'
+    "or permanently, then reopen the terminal:\n"
+    '    [Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "sk-ant-...", "User")\n'
+    "Keys come from https://console.anthropic.com -> API Keys."
+)
+
+
+class MissingCredentials(RuntimeError):
+    """No Anthropic credentials are available in the environment."""
+
+
 class Responder:
     def __init__(
         self,
@@ -86,7 +99,13 @@ class Responder:
         owner: str,
         partner: str,
     ):
-        self._client = anthropic.Anthropic()
+        # The SDK constructs happily without a key and only fails at the first
+        # request, several seconds and one stack trace later. Checking here
+        # turns that into a sentence the reader can act on.
+        try:
+            self._client = anthropic.Anthropic()
+        except Exception as exc:  # noqa: BLE001 - surfaced verbatim below
+            raise MissingCredentials(str(exc)) from exc
         self._cfg = cfg
         self._system = self._build_system(profile, persona, owner, partner)
 
@@ -116,7 +135,43 @@ class Responder:
         """
         rendered = "\n".join(f"{speaker}: {text}" for speaker, text in transcript)
 
-        response = self._client.messages.create(
+        try:
+            response = self._make_request(rendered)
+        except anthropic.AuthenticationError as exc:
+            raise MissingCredentials(
+                f"Anthropic rejected the key — check it is current.\n{_HOW_TO_SET_KEY}\n"
+                f"(the API said: {exc})"
+            ) from exc
+        except TypeError as exc:
+            # No credentials resolve at all: the SDK raises TypeError from
+            # header construction, before any request is sent. Match on the
+            # message so a genuine type error still surfaces as itself.
+            if "authentication method" not in str(exc):
+                raise
+            raise MissingCredentials(
+                f"No Anthropic credentials found.\n{_HOW_TO_SET_KEY}"
+            ) from exc
+
+        if response.stop_reason == "refusal":
+            return Reply(False, "", "model declined to answer this one")
+
+        text = next((b.text for b in response.content if b.type == "text"), "")
+        if not text:
+            return Reply(False, "", "empty response from the model")
+
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError as exc:
+            return Reply(False, "", f"unparseable response: {exc}")
+
+        return Reply(
+            should_reply=bool(data.get("should_reply")),
+            text=str(data.get("reply", "")).strip(),
+            reason=str(data.get("reason", "")).strip(),
+        )
+
+    def _make_request(self, rendered: str):
+        return self._client.messages.create(
             model=self._cfg.model,
             max_tokens=self._cfg.max_tokens,
             system=[
@@ -141,22 +196,4 @@ class Responder:
                     ),
                 }
             ],
-        )
-
-        if response.stop_reason == "refusal":
-            return Reply(False, "", "model declined to answer this one")
-
-        text = next((b.text for b in response.content if b.type == "text"), "")
-        if not text:
-            return Reply(False, "", "empty response from the model")
-
-        try:
-            data = json.loads(text)
-        except json.JSONDecodeError as exc:
-            return Reply(False, "", f"unparseable response: {exc}")
-
-        return Reply(
-            should_reply=bool(data.get("should_reply")),
-            text=str(data.get("reply", "")).strip(),
-            reason=str(data.get("reason", "")).strip(),
         )

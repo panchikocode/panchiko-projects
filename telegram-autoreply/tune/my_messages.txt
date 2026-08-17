@@ -1,0 +1,18 @@
+# Your own past messages, one per line. Lines starting with # are ignored.
+#
+# Paste real messages you have sent — the more the better, 50+ is a good
+# start. This is what the voice is learned from, so the closer these are to
+# how you actually write, the closer the output will be.
+#
+# The examples below are placeholders. Replace them.
+
+да блин, я вчера весь вечер это чинил и так и не починил
+слушай а ты когда сегодня освободишься
+не, я думаю проще переписать целиком чем разбираться в этом
+ахахаха ну ты даёшь
+ок
+короче я запустил, оно работает, но я не понял почему
+сча гляну
+да нет, всё нормально, просто устал
+а чё там по планам на выходные
+блин забыл совсем, извини

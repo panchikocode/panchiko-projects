@@ -19,7 +19,7 @@ from telethon import TelegramClient, events
 from . import config as config_module
 from .guard import Guard
 from .logbook import Logbook
-from .responder import Responder
+from .responder import MissingCredentials, Responder
 from .style import build as build_style
 
 
@@ -94,6 +94,13 @@ async def run(cfg: config_module.Config, armed: bool) -> int:
 
             try:
                 reply = await asyncio.to_thread(responder.compose, transcript)
+            except MissingCredentials as exc:
+                # Worth stopping for rather than logging once per message: no
+                # reply will ever be generated until this is fixed.
+                log.error(f"credentials: {exc}")
+                print(f"\n{exc}\n", file=sys.stderr)
+                await client.disconnect()
+                return
             except Exception as exc:
                 log.error(f"compose failed: {exc}")
                 print(f"! compose failed: {exc}", file=sys.stderr)

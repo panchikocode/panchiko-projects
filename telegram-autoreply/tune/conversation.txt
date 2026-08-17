@@ -1,0 +1,10 @@
+# A made-up conversation to answer. One line per message: `speaker: text`.
+#
+# Use `me` for your side. Anything else is the other person.
+# The last line is the message that needs answering.
+
+her: привет
+me: о, привет
+her: чё делаешь
+me: да ниче особо, за компом сижу
+her: слушай а ты завтра свободен вечером?

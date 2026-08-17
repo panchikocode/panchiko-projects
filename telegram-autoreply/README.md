@@ -26,6 +26,22 @@ python -m venv .venv
    one chat it is allowed to speak in.
 3. Set your Anthropic key: `$env:ANTHROPIC_API_KEY = "sk-ant-..."`
 
+## Tuning the voice first — no Telegram needed
+
+Getting Telegram credentials is the slow part, and none of it is needed to
+work on the thing that actually matters: whether the replies sound like you.
+
+Put your own past messages in `tune/my_messages.txt` and a made-up
+conversation in `tune/conversation.txt`, then:
+
+```
+.venv\Scripts\python -m tools.tune --owner "Your name" --partner "Their name"
+```
+
+It runs the same generator and the same guard the live program uses and prints
+what it would have said. `config.toml` needs no Telegram credentials for this —
+only `ANTHROPIC_API_KEY`. See `tune/README.md`.
+
 ## Running
 
 **Dry run first.** Without `--arm` it prints what it would have said and sends
@@ -109,6 +125,7 @@ message.
 | `autoreply/style.py` | Learning the writing voice |
 | `autoreply/logbook.py` | Append-only record |
 | `autoreply/config.py` | Config loading and validation |
+| `tools/tune.py` | Try the generator offline, against text files |
 
 ## Notes
 
